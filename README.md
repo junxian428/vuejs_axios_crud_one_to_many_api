@@ -6,6 +6,10 @@ npm run serve
 
 npm install --save vue-plugin-load-script@^2.x.x
 
+ERD Diagram
+
+![Untitled Diagram drawio (10)](https://github.com/junxian428/vuejs_frontend_crud/assets/58724748/4ac07240-4f38-4e91-9d83-62488ed8e8fa)
+
 
 Login Page:
 
