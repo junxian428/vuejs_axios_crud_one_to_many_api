@@ -435,6 +435,17 @@ saveData() {
         },
         addPLC() {
           if (this.newPLCName.trim() !== '' && this.newPLCToken.trim() !== '') {
+                  const isDuplicateToken = this.plcItems.some(
+                (plcItem) => plcItem.token === this.newPLCToken
+              );
+
+              if (isDuplicateToken) {
+                // Display an error message or take any action to handle the duplicate token
+                alert('Token is already used in another PLC. Please use a different token.');
+                return;
+              }
+
+
             this.plcItems.push({
               id: this.plcItems.length + 1,
               name: this.newPLCName,
@@ -477,13 +488,26 @@ saveData() {
           plc.editingToken = true;
           plc.newToken = plc.token;
         },
-        savePLCToken(plc) {
-          plc.token = plc.newToken;
-          plc.editingToken = false;
-          plc.newToken = '';
-          this.showSuccessModal();
 
-        },
+       savePLCToken(plc) {
+      // Check if the new token is not already used in any other PLC
+      const isDuplicateToken = this.plcItems.some(
+        (plcItem) => plcItem !== plc && plcItem.token === plc.newToken
+      );
+
+      if (isDuplicateToken) {
+        // Display an error message or take any action to handle the duplicate token
+        alert('Token is already used in another PLC. Please use a different token.');
+        return;
+      }
+
+      plc.token = plc.newToken;
+      plc.editingToken = false;
+      plc.newToken = '';
+      this.showSuccessModal();
+    },
+
+    
         cancelEditPLCToken(plc) {
           plc.editingToken = false;
           plc.newToken = '';
