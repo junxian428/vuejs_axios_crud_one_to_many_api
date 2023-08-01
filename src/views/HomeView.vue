@@ -139,6 +139,7 @@
         <table v-if="plc.showDropdown">
           <thead>
             <tr>
+              <th>Address ID</th>
               <th>Address</th>
               <th>Description</th>
               <th>Token</th>
@@ -148,13 +149,14 @@
           </thead>
           <tbody>
             <tr v-for="(address, addressIndex) in plc.addresses" :key="addressIndex">
+              <td>{{ address.id }}</td> <!-- Display Address ID here -->
               <td>{{ address.name }}</td>
               <td v-if="!address.editing">{{ address.description }}</td>
               <td v-else><input v-model="address.description" @keyup.enter="saveAddress(address)" @blur="saveAddress(address)" placeholder="Address description"  style="line-height: 28px;" ></td>
               <td>{{ plc.token }}</td>
               <td>{{ plc.id }}</td>
               <td>
-                <button @click="showDeleteConfirmation(plcIndex, addressIndex)" class="red-alert-button">Delete</button>
+                <button @click=" showDeleteConfirmation(plcIndex, addressIndex)" class="red-alert-button">Delete</button>
                 <br>
                 <button v-if="!address.editing" @click="editAddress(address)" class="ocean-blue-edit-button">&nbsp&nbspEdit&nbsp&nbsp</button>
                 <template v-else>
@@ -167,10 +169,10 @@
           <tfoot>
             <tr>
               <td>
-                <input v-model="newAddress.name"   style="line-height: 28px;" placeholder="Address name">
+                <input v-model="newAddressName"   style="line-height: 28px;" placeholder="Address Name">
               </td>
               <td>
-                <input v-model="newAddress.description"  style="line-height: 28px;" placeholder="Address description">
+                <input v-model="newAddressDescription"  style="line-height: 28px;" placeholder="Address description">
               </td>
               <td>
                 {{ plc.token }}
@@ -193,9 +195,9 @@
 
       
       <div>
-        <input v-model="newPLCName"  style="line-height: 28px;" placeholder="PLC name">
-        <input v-model="newPLCToken" style=" margin-left:30px; line-height: 28px;" placeholder="PLC token">
-        <button @click="addPLC" class="grass-green-add-button" style="margin-left:30px;">Add PLC</button>
+        <input v-model="newPLCName" style="line-height: 28px;" placeholder="PLC name">
+  <input v-model="newPLCToken" style="margin-left: 30px; line-height: 28px;" placeholder="PLC token">
+  <button @click="addPLC" class="grass-green-add-button" style="margin-left: 30px;">Add PLC</button>
       </div>
     </div>
   </div>
@@ -212,6 +214,7 @@ import VueCookies from 'vue-cookies';
 
 export default{
   name: "Home",
+  
   data() {
     return{
       formData: {
@@ -219,176 +222,69 @@ export default{
         email: "",
         // Add more form fields as needed
       },
+      addresses: {
+        id: '', // Bind the 'name' input value to this property
+        name: '', // Bind the 'description' input value to this property
+      },
+      responseData: null,
+      error: null,
       successModalVisible: false,
-      userID: 'User123', // Replace 'User123' with your user ID
-        userToken: 'UserToken123', // Replace 'UserToken123' with your user token
-        plcItems: [
-          {
-            id: 1,
-            name: 'Primary Treatment Plant Tank 1 (OMRON PLC)',
-            token: 'Token 1',
-            editingToken: false,
-            newToken: '',
-            showDropdown: false,
-            addresses: [
-              { name: '100.00', description: 'Pressure Alarm', editing: false },
-              { name: '100.01', description: 'pH Alarm', editing: false },
-              { name: '100.02', description: 'Temperature Alarm', editing: false },
-              { name: '100.03', description: 'Level Alarm', editing: false },
-              { name: '100.04', description: 'Security Alarm', editing: false },
-              { name: '100.05', description: 'Fire Alarm', editing: false },
-              // Add more addresses with descriptions here
-            ],
-          },
-          {
-            id: 2,
-            name: 'Primary Treatment Plant Tank 2 (Siemen PLC)',
-            token: 'Token 2',
-            editingToken: false,
-            newToken: '',
-            showDropdown: false,
-            addresses: [
-              { name: 'Address 1', description: 'Description for Address 1 in PLC 2', editing: false },
-              { name: 'Address 2', description: 'Description for Address 2 in PLC 2', editing: false },
-              // Add more addresses with descriptions here
-            ],
-          },
-          {
-            id: 3,
-            name: 'Primary Treatment Plant Tank 3 (Delta PLC)',
-            token: 'Token 2',
-            editingToken: false,
-            newToken: '',
-            showDropdown: false,
-            addresses: [
-              { name: 'Address 1', description: 'Description for Address 1 in PLC 3', editing: false },
-              { name: 'Address 2', description: 'Description for Address 2 in PLC 3', editing: false },
-              // Add more addresses with descriptions here
-            ],
-          },
-          {
-            id: 4,
-            name: 'Secondary Treatment Plant Tank 1 (Mitsubushi PLC)',
-            token: 'Token 2',
-            editingToken: false,
-            newToken: '',
-            showDropdown: false,
-            addresses: [
-              { name: 'Address 1', description: 'Description for Address 1 in PLC 4', editing: false },
-              { name: 'Address 2', description: 'Description for Address 2 in PLC 4', editing: false },
-              // Add more addresses with descriptions here
-            ],
-          },
-          {
-            id: 5,
-            name: 'Secondary Treatment Plant Tank 2 (ABB PLC)',
-            token: 'Token 2',
-            editingToken: false,
-            newToken: '',
-            showDropdown: false,
-            addresses: [
-              { name: 'Address 1', description: 'Description for Address 1 in PLC 4', editing: false },
-              { name: 'Address 2', description: 'Description for Address 2 in PLC 4', editing: false },
-              // Add more addresses with descriptions here
-            ],
-          },
-          {
-            id: 6,
-            name: 'Secondary Treatment Plant Tank 3 (Burkert PLC)',
-            token: 'Token 2',
-            editingToken: false,
-            newToken: '',
-            showDropdown: false,
-            addresses: [
-              { name: 'Address 1', description: 'Description for Address 1 in PLC 4', editing: false },
-              { name: 'Address 2', description: 'Description for Address 2 in PLC 4', editing: false },
-              // Add more addresses with descriptions here
-            ],
-          },
-          {
-            id: 7,
-            name: 'Tertiary Treatment Plant Tank 1 (Amsamotion PLC)',
-            token: 'Token 2',
-            editingToken: false,
-            newToken: '',
-            showDropdown: false,
-            addresses: [
-              { name: 'Address 1', description: 'Description for Address 1 in PLC 4', editing: false },
-              { name: 'Address 2', description: 'Description for Address 2 in PLC 4', editing: false },
-              // Add more addresses with descriptions here
-            ],
-          },
-          {
-            id: 8,
-            name: 'Tertiary Treatment Plant Tank 2 (HFCA PLC)',
-            token: 'Token 2',
-            editingToken: false,
-            newToken: '',
-            showDropdown: false,
-            addresses: [
-              { name: 'Address 1', description: 'Description for Address 1 in PLC 4', editing: false },
-              { name: 'Address 2', description: 'Description for Address 2 in PLC 4', editing: false },
-              // Add more addresses with descriptions here
-            ],
-          },
-          {
-            id: 9,
-            name: 'Tertiary Treatment Plant Tank 3 (Allen Bradley PLC)',
-            token: 'Token 2',
-            editingToken: false,
-            newToken: '',
-            showDropdown: false,
-            addresses: [
-              { name: 'Address 1', description: 'Description for Address 1 in PLC 4', editing: false },
-              { name: 'Address 2', description: 'Description for Address 2 in PLC 4', editing: false },
-              // Add more addresses with descriptions here
-            ],
-          },
-          {
-            id: 10,
-            name: 'Advanced Treatment Plant Tank 1 (Schneider PLC)',
-            token: 'Token 2',
-            editingToken: false,
-            newToken: '',
-            showDropdown: false,
-            addresses: [
-              { name: 'Address 1', description: 'Description for Address 1 in PLC 4', editing: false },
-              { name: 'Address 2', description: 'Description for Address 2 in PLC 4', editing: false },
-              // Add more addresses with descriptions here
-            ],
-          },
-          {
-            id: 11,
-            name: 'Advanced Treatment Plant Tank 2 (Toshiba PLC)',
-            token: 'Token 2',
-            editingToken: false,
-            newToken: '',
-            showDropdown: false,
-            addresses: [
-              { name: 'Address 1', description: 'Description for Address 1 in PLC 4', editing: false },
-              { name: 'Address 2', description: 'Description for Address 2 in PLC 4', editing: false },
-              // Add more addresses with descriptions here
-            ],
-          },
-          {
-            id: 12,
-            name: 'Advanced Treatment Plant Tank 3 (Keyence PLC)',
-            token: 'Token 2',
-            editingToken: false,
-            newToken: '',
-            showDropdown: false,
-            addresses: [
-              { name: 'Address 1', description: 'Description for Address 1 in PLC 4', editing: false },
-              { name: 'Address 2', description: 'Description for Address 2 in PLC 4', editing: false },
-              // Add more addresses with descriptions here
-            ],
-          },
-          // Add more PLC items here as needed
-        ],
-        newPLCName: '',
-        newPLCToken: '',
-        newAddress: { name: '', description: '' },
+      userID: '5', // Replace 'User123' with your user ID
+      userToken: 'UserToken123', // Replace 'UserToken123' with your user token
+      plcItems: [],
+      categorizedAddresses : {},
+      newAddressDescription: '',
+      newAddressName : '',
+      
     }
+  },
+  mounted() {
+    // Making a GET request
+    axios.get('http://localhost:8089/plc')
+      .then(response => {
+        this.plcItems = response.data;
+        //for (let i = 0; i < response.data.length; i++) {
+        //  console.log(response.data[i].name);
+       // }
+        //console.log(response.data[0].addresses[0]);
+        //console.log(response.data[0].name);
+
+
+
+
+// Initialize an empty object to store the categorized addresses under tokens
+//const categorizedAddresses = {};
+
+// Loop through the data array and categorize addresses under tokens
+this.plcItems.forEach((item) => {
+  if (item.token && item.addresses && item.addresses.length > 0) {
+    // If the token does not exist in the categorizedAddresses object, initialize an array for it
+    if (!this.categorizedAddresses[item.token]) {
+      this.categorizedAddresses[item.token] = [];
+    }
+
+    // Add the addresses of the current item to the corresponding token array
+    item.addresses.forEach((address) => {
+      if (address.id && address.name) {
+        this.categorizedAddresses[item.token].push({
+          id: address.id,
+          name: address.name,
+          description: address.description,
+        });
+      }
+    });
+  }
+});
+
+// Output the categorized addresses under tokens
+console.log("Categorized Addresses:", this.categorizedAddresses);
+        //
+        //
+        
+      })
+      .catch(error => {
+        this.error = error.message;
+      });
   },
   methods: {
     showDeleteConfirmation(plcIndex, addressIndex) {
@@ -426,59 +322,247 @@ saveData() {
 
 
 //
-  
+findPLCWithAddressId(addressId) {
+  for (let plcIndex = 0; plcIndex < this.plcItems.length; plcIndex++) {
+    const plc = this.plcItems[plcIndex];
+    for (let addressIndex = 0; addressIndex < plc.addresses.length; addressIndex++) {
+      if (plc.addresses[addressIndex].id === addressId) {
+        return { plcIndex, addressIndex };
+      }
+    }
+  }
+  return null; // Address ID not found in any PLC
+},
+
     toggleDropdown(plcIndex) {
           this.plcItems[plcIndex].showDropdown = !this.plcItems[plcIndex].showDropdown;
         },
         deletePLC(plcIndex) {
-          this.plcItems.splice(plcIndex, 1);
+           // Get the PLC ID from the PLC object to be deleted
+            const plcIdToDelete = this.plcItems[plcIndex].id;
+
+          // Make the DELETE request using Axios
+          axios.delete(`http://localhost:8089/plc/${plcIdToDelete}`)
+            .then(response => {
+              // If the request is successful, remove the PLC item from the array in the frontend
+              this.plcItems.splice(plcIndex, 1);
+            })
+            .catch(error => {
+              // Handle errors if needed
+              console.error('Error deleting PLC:', error);
+            });
         },
         addPLC() {
-          if (this.newPLCName.trim() !== '' && this.newPLCToken.trim() !== '') {
-                  const isDuplicateToken = this.plcItems.some(
-                (plcItem) => plcItem.token === this.newPLCToken
-              );
+      if (this.newPLCName.trim() !== '' && this.newPLCToken.trim() !== '') {
+        const isDuplicateToken = this.plcItems.some(
+          (plcItem) => plcItem.token === this.newPLCToken
+        );
 
-              if (isDuplicateToken) {
-                // Display an error message or take any action to handle the duplicate token
-                alert('Token is already used in another PLC. Please use a different token.');
-                return;
-              }
+        if (isDuplicateToken) {
+          alert('Token is already used in another PLC. Please use a different token.');
+          return;
+        }
+
+        // Create the new PLC object
+        const newPLC = {
+          name: this.newPLCName,
+          token: this.newPLCToken,
+          editingToken: false,
+          newToken: '',
+          showDropdown: false,
+          addresses: [],
+          plc_userid: this.userID,
+        };
+
+        // Send a POST request to the server to create the new PLC
+        axios.post('http://localhost:8089/plc', newPLC)
+          .then(response => {
+            // Handle success and update the list of PLC items or perform any other actions as required
+            console.log('New PLC added successfully');
+            this.plcItems.push(response.data); // Assuming the server responds with the newly created PLC object
+          })
+          .catch(error => {
+            // Handle error, if needed
+            console.error('Error adding new PLC:', error);
+          });
+
+        this.newPLCName = '';
+        this.newPLCToken = '';
+      }
+    },
+    async addAddress(plcIndex) {
+  // Create a new address object
+      //console.log(plcIndex);
+      //console.log(this.plcItems[plcIndex]);
+      //plc.addresses.name
+      //console.log(plc.addresses.name);
+      //console.log(this.plc.addresses.description);
+
+      //console.log(newAddress.id);
+      /*
+        31/7/2023
+        Author: junxian428
+      */
+     //console.log(this.newAddressName);
+     //console.log(this.newAddressDescription);
+     //console.log(this.plcItems[plcIndex]);
+    // console.log(this.plcItems[plcIndex].id);
+
+     //
+
+      
+     try {
+      const plcId = this.plcItems[plcIndex].id; // Replace this with the correct PLC ID you want to update
+      const response = await axios.put(`http://localhost:8089/plc/${plcId}`, {
+        name: this.plcItems[plcIndex].name,
+        token: this.plcItems[plcIndex].token,
+        userid: this.userID,
+        addresses: [
+          {
+            name: this.newAddressName,
+            description: this.newAddressDescription,
+          },
+        ],
+      });
+
+      // The response data will contain the updated PLC information
+      console.log("Updated PLC:", response.data);
+      console.log("Updated PLC:", response.data.addresses[0].id);
+      // After successfully adding the address, you can update the local Vue data to reflect the changes
+      this.plcItems[plcIndex].addresses.push({
+        id: response.data.addresses[0].id,
+        name: this.newAddressName,
+        description: this.newAddressDescription,
+      });
+
+      // Clear the input fields after adding the address
+      this.newAddressName = "";
+      this.newAddressDescription = "";
 
 
-            this.plcItems.push({
-              id: this.plcItems.length + 1,
-              name: this.newPLCName,
-              token: this.newPLCToken,
-              editingToken: false,
-              newToken: '',
-              showDropdown: false,
-              addresses: [],
+
+    } catch (error) {
+      console.error("Error updating PLC:", error);
+    }
+    
+
+     //console.log(this.addresses.id);
+
+},
+
+async updatePLCAddress(plcIndex, newAddress) {
+      const plc = this.plcItems[plcIndex];
+
+      try {
+        // First, push the new address to the addresses array of the corresponding PLC
+        //this.plcItems[plcIndex].addresses.push(newAddress);
+
+        // Perform the PUT request to update the address array on the server
+        const response = await axios.post(`http://localhost:8089/address`, {
+          userid: 1,
+          plcid: plcIndex,
+          
+        });
+
+        // Optionally, update the local data with the response from the server if needed
+        // this.plcItems[plcIndex].addresses = response.data.addresses;
+
+        console.log('PLC address updated successfully');
+      } catch (error) {
+        console.error('Error updating PLC address:', error);
+        // If there's an error during the PUT request, remove the newly added address from the local data
+        this.plcItems[plcIndex].addresses.pop();
+        throw error; // Re-throw the error to be caught by the calling method (addAddress)
+      }
+    },
+
+    deleteAddress(addressIdToDelete,addressIndex) {
+      // Find the PLC that contains the address with the specified Address ID
+      //console.log(addressIdToDelete); 
+      //console.log(addressIdToDelete);
+      //console.log(addressIndex);
+      //console.log(this.plcItems[addressIdToDelete].token);
+      const address = this.categorizedAddresses[this.plcItems[addressIdToDelete].token];
+      //console.log(address[addressIndex]);
+      //console.log(address[addressIndex].id);
+
+            // Make the DELETE request using Axios
+            axios.delete(`http://localhost:8089/address/${address[addressIndex].id}`)
+            .then(response => {
+              // If the request is successful, remove the PLC item from the array in the frontend
+              console.log(addressIndex);
+              //this.address.pop(addressIndex, 1);
+              //this.address.splice(addressIndex, 1);
+              //this.plcItems[plcIndex].addresses.splice(addressIndex, 1);
+
+            })
+            .catch(error => {
+              // Handle errors if needed
+              console.error('Error deleting PLC:', error);
             });
-            this.newPLCName = '';
-            this.newPLCToken = '';
-            
+
+
+      //console.log(this.categorizedAddresses[this.plcItems[addressIdToDelete].token[addressIndex]]);
+    },
+/*
+
+            deleteAddress(plcIndex, addressIndex) {
+          // Check if the PLC item exists at plcIndex
+
+          if (this.plcItems[plcIndex]) {
+            // Get the specified PLC item
+
+
+
+           // const plcItem = this.plcItems[plcIndex];
+            //
+           // console.log(plcItem.addresses.id);
+
+            // Check if the address exists at addressIndex within the addresses array of the PLC item
+            if (plcItem.addresses && plcItem.addresses.length > addressIndex) {
+              // Remove the address at addressIndex from the addresses array
+                        // Make the DELETE request using Axios
+                axios.delete(`http://localhost:8089/address/${addressIndex}`)
+                  .then(response => {
+                    // If the request is successful, remove the PLC item from the array in the frontend
+                    plcItems.addresses.splice(addressIndex, 1);
+                  })
+                  .catch(error => {
+                    // Handle errors if needed
+                    console.error('Error deleting PLC:', error);
+                  });
+
+            } else {
+              console.error('Invalid addressIndex:', addressIndex);
+            }
+          } else {
+            console.error('Invalid plcIndex:', plcIndex);
           }
         },
-        addAddress(plcIndex) {
-          if (this.newAddress.name.trim() !== '' && this.newAddress.description.trim() !== '') {
-            this.plcItems[plcIndex].addresses.push({
-              name: this.newAddress.name,
-              description: this.newAddress.description,
-              editing: false,
-            });
-            this.newAddress = { name: '', description: '' };
-          }
-        },
-        deleteAddress(plcIndex, addressIndex) {
-          this.plcItems[plcIndex].addresses.splice(addressIndex, 1);
-        },
+        */
+
         editAddress(address) {
           address.editing = true;
         },
-        saveAddress(address) {
+        saveAddress(address,addressIndex) {
           address.editing = false;
+          //console.log(address.description);
+          //console.log(address);
+          axios.put(`http://localhost:8089/address/${address.id}`, address).then(response => {
+          // Handle the response if needed
+          console.log('Object updated successfully!', response);
+          // You can also update the local object if needed
+          this.proxyObject.description = this.updatedDescription;
+          // Reset the input field for the next update
+          this.updatedDescription = '';
           this.showSuccessModal();
+
+        })
+        .catch(error => {
+          // Handle errors if any
+          console.error('Error updating object:', error);
+        
+        });
 
         },
         cancelEdit(address) {
@@ -491,23 +575,24 @@ saveData() {
 
        savePLCToken(plc) {
       // Check if the new token is not already used in any other PLC
-      const isDuplicateToken = this.plcItems.some(
-        (plcItem) => plcItem !== plc && plcItem.token === plc.newToken
-      );
+          const isDuplicateToken = this.plcItems.some(
+            (plcItem) => plcItem !== plc && plcItem.token === plc.newToken
+          );
 
-      if (isDuplicateToken) {
-        // Display an error message or take any action to handle the duplicate token
-        alert('Token is already used in another PLC. Please use a different token.');
-        return;
-      }
+          if (isDuplicateToken) {
+            // Display an error message or take any action to handle the duplicate token
+            alert('Token is already used in another PLC. Please use a different token.');
+            return;
+          }
 
-      plc.token = plc.newToken;
-      plc.editingToken = false;
-      plc.newToken = '';
-      this.showSuccessModal();
+
+          plc.token = plc.newToken;
+          plc.editingToken = false;
+          plc.newToken = '';
+          this.showSuccessModal();
     },
 
-    
+
         cancelEditPLCToken(plc) {
           plc.editingToken = false;
           plc.newToken = '';
@@ -661,7 +746,7 @@ methods: {
 
       //
 
-      axios.post('http://javaspring-env.eba-dzxvrt3g.us-east-1.elasticbeanstalk.com/api/v1/auth/quit')
+      axios.post('http://')
         .then(() => {
           // Handle successful logout
           // Clear any user-related data in your Vue.js application

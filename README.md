@@ -28,3 +28,58 @@ Time: 4:00 pm
 CSS Design (Login Page)
 
 https://enlear.academy/31-example-login-form-for-website-42abc6f6d525
+
+
+31/7/ 2023 - Delete Function (PLC and Address but have bug)
+
+1/8/ 2023 - 
+
+POST METHOD: localhost:8089/plc
+
+{
+    "name": "PLC",
+    "token": "UWU",
+    "userid": "1",
+        "addresses": [
+            {
+                "name": "Address 1",
+                "description": "Description for Address 1 in PLC 6"
+            },
+            {
+                "name": "Address 3",
+                "description": "Description for Address 3 in PLC 6"
+            },
+            {
+                "name": "Address 3",
+                "description": "Description for Address 3 in PLC 6"
+            }
+        ]
+
+}
+
+
+PUT METHOD: localhost:8089/plc/34 (Frontend Add method)
+
+
+{
+    "name": "PLC",
+    "token": "TTT",
+    "userid": "1",
+    "addresses": [
+        {
+            "name": "XDD",
+            "description": "Description for Address 3 in PLC 6"
+        }
+    
+    ]
+
+}
+
+
+DELETE METHOD: localhost:8089/plc/10
+
+
+DELETE METHOD: localhost:8089/address/97
+
+
+
