@@ -152,11 +152,11 @@
               <td>{{ address.id }}</td> <!-- Display Address ID here -->
               <td>{{ address.name }}</td>
               <td v-if="!address.editing">{{ address.description }}</td>
-              <td v-else><input v-model="address.description" @keyup.enter="saveAddress(address)" @blur="saveAddress(address)" placeholder="Address description"  style="line-height: 28px;" ></td>
+              <td v-else><input v-model="address.description" @keyup.enter="saveAddress(address,plcIndex,plc)" @blur="saveAddress(address)" placeholder="Address description"  style="line-height: 28px;" ></td>
               <td>{{ plc.token }}</td>
               <td>{{ plc.id }}</td>
               <td>
-                <button @click=" showDeleteConfirmation(plcIndex, addressIndex)" class="red-alert-button">Delete</button>
+                <button @click=" showDeleteConfirmation(plcIndex, addressIndex,address)" class="red-alert-button">Delete</button>
                 <br>
                 <button v-if="!address.editing" @click="editAddress(address)" class="ocean-blue-edit-button">&nbsp&nbspEdit&nbsp&nbsp</button>
                 <template v-else>
@@ -239,60 +239,59 @@ export default{
     }
   },
   mounted() {
-    // Making a GET request
-    axios.get('http://localhost:8089/plc')
-      .then(response => {
-        this.plcItems = response.data;
-        //for (let i = 0; i < response.data.length; i++) {
-        //  console.log(response.data[i].name);
-       // }
-        //console.log(response.data[0].addresses[0]);
-        //console.log(response.data[0].name);
+  // Making a GET request
+  axios.get('http://localhost:8089/plc')
+    .then(response => {
+      this.plcItems = response.data;
 
+      // Initialize an empty object to store the categorized addresses under IDs
+      const categorizedAddresses = {};
 
+      // Loop through the data array and categorize addresses under IDs
+      this.plcItems.forEach((item) => {
+        if (item.addresses && item.addresses.length > 0) {
+          // Add the addresses of the current item to the corresponding ID array
+          item.addresses.forEach((address) => {
+            if (address.id && address.name) {
+              // If the ID does not exist in the categorizedAddresses object, initialize an array for it
+              if (!categorizedAddresses[address.id]) {
+                categorizedAddresses[address.id] = [];
+              }
 
-
-// Initialize an empty object to store the categorized addresses under tokens
-//const categorizedAddresses = {};
-
-// Loop through the data array and categorize addresses under tokens
-this.plcItems.forEach((item) => {
-  if (item.token && item.addresses && item.addresses.length > 0) {
-    // If the token does not exist in the categorizedAddresses object, initialize an array for it
-    if (!this.categorizedAddresses[item.token]) {
-      this.categorizedAddresses[item.token] = [];
-    }
-
-    // Add the addresses of the current item to the corresponding token array
-    item.addresses.forEach((address) => {
-      if (address.id && address.name) {
-        this.categorizedAddresses[item.token].push({
-          id: address.id,
-          name: address.name,
-          description: address.description,
-        });
-      }
-    });
-  }
-});
-
-// Output the categorized addresses under tokens
-console.log("Categorized Addresses:", this.categorizedAddresses);
-        //
-        //
-        
-      })
-      .catch(error => {
-        this.error = error.message;
+              // Push the address details to the array under the corresponding ID
+              categorizedAddresses[address.id].push({
+                id: address.id,
+                name: address.name,
+                description: address.description,
+              });
+            }
+          });
+        }
       });
-  },
+
+      // Now you have the categorized addresses under their IDs
+      console.log("Categorized Addresses:", categorizedAddresses);
+
+      // Assign the categorized addresses to the component's data
+      this.categorizedAddresses = categorizedAddresses;
+    })
+    .catch(error => {
+      this.error = error.message;
+    });
+},
+
   methods: {
-    showDeleteConfirmation(plcIndex, addressIndex) {
+    showDeleteConfirmation(plcIndex, addressIndex, address) {
     const confirmed = confirm("Are you sure you want to delete this address?");
     if (confirmed) {
-      this.deleteAddress(plcIndex, addressIndex);
+      this.deleteAddress(plcIndex, addressIndex,address);
     }
   },
+  //
+
+
+
+
 //
 saveData() {
       // Simulate saving data to the server (replace this with your actual API call)
@@ -426,8 +425,8 @@ findPLCWithAddressId(addressId) {
       });
 
       // The response data will contain the updated PLC information
-      console.log("Updated PLC:", response.data);
-      console.log("Updated PLC:", response.data.addresses[0].id);
+      //console.log("Updated PLC:", response.data);
+      //console.log("Updated PLC:", response.data.addresses[0].id);
       // After successfully adding the address, you can update the local Vue data to reflect the changes
       this.plcItems[plcIndex].addresses.push({
         id: response.data.addresses[0].id,
@@ -449,9 +448,25 @@ findPLCWithAddressId(addressId) {
      //console.log(this.addresses.id);
 
 },
-
-async updatePLCAddress(plcIndex, newAddress) {
+//
+//This Function is for Update ADdress by getting Parent Node Attribute PLease dont not delete this.
+//
+categorizedAddressesFindByAddressID(addressID) {
+    // Find the PLC that contains the address with the specified addressID
+    for (let plcIndex = 0; plcIndex < this.plcItems.length; plcIndex++) {
       const plc = this.plcItems[plcIndex];
+      for (let addressIndex = 0; addressIndex < plc.addresses.length; addressIndex++) {
+        if (plc.addresses[addressIndex].id === addressID) {
+          return plc;
+        }
+      }
+    }
+    return null; // Return null if the address ID is not found in any PLC
+  },
+    async updatePLCAddress(addressIndex, plcIndex) {
+      //const plc = this.plcItems[plcIndex];
+      //console.log(this.categorizedAddresses[);
+      this.plcItems[plcIndex].addresses.pop();
 
       try {
         // First, push the new address to the addresses array of the corresponding PLC
@@ -471,35 +486,50 @@ async updatePLCAddress(plcIndex, newAddress) {
       } catch (error) {
         console.error('Error updating PLC address:', error);
         // If there's an error during the PUT request, remove the newly added address from the local data
-        this.plcItems[plcIndex].addresses.pop();
         throw error; // Re-throw the error to be caught by the calling method (addAddress)
       }
     },
 
-    deleteAddress(addressIdToDelete,addressIndex) {
+    deleteAddress(addressIdToDelete,addressIndex, address) {
+      console.log(addressIdToDelete);
+      console.log(address);
+
+    // Make the DELETE request using Axios
+     axios.delete(`http://localhost:8089/address/${address.id}`).then(response => {
+        // If the request is successful, remove the address from the local Vue data
+        this.plcItems[plcIndex].addresses.splice(addressIndex, 1);
+        console.log('Address deleted successfully:', response.data);
+      })
+      .catch(error => {
+        // Handle errors if needed
+        console.error('Error deleting address:', error);
+      });
+    
+  
       // Find the PLC that contains the address with the specified Address ID
       //console.log(addressIdToDelete); 
       //console.log(addressIdToDelete);
       //console.log(addressIndex);
       //console.log(this.plcItems[addressIdToDelete].token);
-      const address = this.categorizedAddresses[this.plcItems[addressIdToDelete].token];
+      
+      //const address = this.categorizedAddresses[this.plcItems[addressIdToDelete].token];
       //console.log(address[addressIndex]);
       //console.log(address[addressIndex].id);
 
             // Make the DELETE request using Axios
-            axios.delete(`http://localhost:8089/address/${address[addressIndex].id}`)
-            .then(response => {
+        //    axios.delete(`http://localhost:8089/address/${address[addressIndex].id}`)
+          //  .then(response => {
               // If the request is successful, remove the PLC item from the array in the frontend
-              console.log(addressIndex);
+            //  console.log(addressIndex);
               //this.address.pop(addressIndex, 1);
               //this.address.splice(addressIndex, 1);
               //this.plcItems[plcIndex].addresses.splice(addressIndex, 1);
 
-            })
-            .catch(error => {
+            //})
+            //.catch(error => {
               // Handle errors if needed
-              console.error('Error deleting PLC:', error);
-            });
+             // console.error('Error deleting PLC:', error);
+            //});
 
 
       //console.log(this.categorizedAddresses[this.plcItems[addressIdToDelete].token[addressIndex]]);
@@ -544,36 +574,88 @@ async updatePLCAddress(plcIndex, newAddress) {
         editAddress(address) {
           address.editing = true;
         },
-        saveAddress(address,addressIndex) {
+        async saveAddress(address,plcIndex,plc) {
           address.editing = false;
+          console.log(address.id);
+          console.log(address.name);
+          console.log(address.description);
+          //console.log(plcIndex);
           //console.log(address.description);
-          //console.log(address);
-          axios.put(`http://localhost:8089/address/${address.id}`, address).then(response => {
-          // Handle the response if needed
-          console.log('Object updated successfully!', response);
-          // You can also update the local object if needed
-          this.proxyObject.description = this.updatedDescription;
-          // Reset the input field for the next update
-          this.updatedDescription = '';
-          this.showSuccessModal();
+          //console.log(this.plcItems);
+          //console.log(this.categorizedAddresses);
+          console.log(this.categorizedAddressesFindByAddressID(address.id));
+          const TargetPLC =  this.categorizedAddressesFindByAddressID(address.id);
+          console.log(TargetPLC.id);
+          console.log(TargetPLC.name);
+          console.log(TargetPLC.userid);
+          console.log(TargetPLC.token);
 
-        })
-        .catch(error => {
-          // Handle errors if any
-          console.error('Error updating object:', error);
-        
-        });
+          try {
+      // Assuming you have the TargetPLC object as the parent PLC of the address
+      const response = await axios.put(`http://localhost:8089/plc/${TargetPLC.id}`, {
+        name: TargetPLC.name,
+        token: TargetPLC.token,
+        userid: TargetPLC.userid,
+        addresses: [
+          {
+            id: address.id,
+            name: address.name,
+            description: address.description,
+          },
+        ],
+      });
+
+      // The response data will contain the updated PLC information
+      console.log("Updated PLC:", response.data);
+
+      // After successfully saving the address, you can update the local Vue data to reflect the changes if needed
+      // For example, if the server returned an updated PLC object, you can replace the old PLC object in the array
+      //this.plcItems.splice(plcIndex, 1, response.data);
+    } catch (error) {
+      console.error("Error saving address:", error);
+      // Handle the error as needed, e.g., show an error message to the user
+    }
+  
+
+  // ... (your other methods)
+
+
+
+          
+          //console.log(this.categorizedAddresses["OMRON 1234"][0]);
+          //console.log(this.plcItems);
+          //const plcItem = this.plcItems[plcIndex];
+          //console.log(plcItem);
+          //
 
         },
         cancelEdit(address) {
           address.editing = false;
         },
-        editPLCToken(plc) {
+         editPLCToken(plc) {
           plc.editingToken = true;
-          plc.newToken = plc.token;
+      
+          //console.log(plc.newToken);
+          //
+
+
+     
+
+            plc.newToken = plc.token;
+
+
+      
+
+
+
+
+
+
+
+          //
         },
 
-       savePLCToken(plc) {
+       async savePLCToken(plc, plcIndex) {
       // Check if the new token is not already used in any other PLC
           const isDuplicateToken = this.plcItems.some(
             (plcItem) => plcItem !== plc && plcItem.token === plc.newToken
@@ -586,10 +668,30 @@ async updatePLCAddress(plcIndex, newAddress) {
           }
 
 
+ 
+
+          try {
+              const plcId = plc.id; // Replace this with the correct PLC ID you want to update
+              /*
+              const response = await axios.put(`http://localhost:8089/plc/updateToken/${plcId}`, {
+                name: plc.name,
+                token: plc.newToken,
+                userid: this.userID,
+                addresses: this.addresses
+          });
+          */
+          console.log(this.addresses);
           plc.token = plc.newToken;
           plc.editingToken = false;
           plc.newToken = '';
           this.showSuccessModal();
+            // The response data will contain the updated PLC information
+            //console.log("Updated PLC:", response.data);
+            //console.log("Updated PLC:", response.data.addresses[0].id);
+          } catch (error) {
+            console.error("Error updating PLC:", error);
+          }
+    
     },
 
 
