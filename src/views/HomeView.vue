@@ -351,6 +351,7 @@ findPLCWithAddressId(addressId) {
               console.error('Error deleting PLC:', error);
             });
         },
+        // Create PLC
         addPLC() {
       if (this.newPLCName.trim() !== '' && this.newPLCToken.trim() !== '') {
         const isDuplicateToken = this.plcItems.some(
@@ -635,23 +636,36 @@ categorizedAddressesFindByAddressID(addressID) {
         cancelEdit(address) {
           address.editing = false;
         },
-         editPLCToken(plc) {
+         async editPLCToken(plc) {
           plc.editingToken = true;
-      
+          plc.newToken = plc.token;
+
           //console.log(plc.newToken);
           //
 
+          /*
+            try {
+              const plcId = this.plcItems[plcIndex].id; // Replace this with the correct PLC ID you want to update
+              const response = await axios.put(`http://localhost:8089/plc/${plcId}`, {
+                name: this.plcItems[plcIndex].name,
+                token: plc.token,
+                userid: this.userID,
+                addresses: this.addresses,
+              });
 
-     
-
-            plc.newToken = plc.token;
-
-
-      
-
+              // The response data will contain the updated PLC information
+              //console.log("Updated PLC:", response.data);
+              //console.log("Updated PLC:", response.data.addresses[0].id);
+              // After successfully adding the address, you can update the local Vue data to reflect the changes
+              plc.newToken = plc.token;
 
 
 
+              } catch (error) {
+                console.error("Error updating PLC:", error);
+              }
+
+              */
 
 
 
@@ -683,11 +697,51 @@ categorizedAddressesFindByAddressID(addressID) {
                 addresses: this.addresses
           });
           */
-          console.log(this.addresses);
-          plc.token = plc.newToken;
-          plc.editingToken = false;
-          plc.newToken = '';
-          this.showSuccessModal();
+            //console.log(this.addresses);
+            plc.token = plc.newToken;
+            plc.editingToken = false;
+            plc.newToken = '';
+            this.showSuccessModal();
+
+            //console.log(plcIndex);
+            //console.log(plc);
+            //console.log(plc.id);
+            //console.log(plc.name);
+            //console.log(plc.addresses);
+            //console.log(plc.userid);
+            //console.log(plc.token);
+            //
+
+
+            try {
+                //const plcId = this.plcItems[plcIndex].id; // Replace this with the correct PLC ID you want to update
+                const response = await axios.put(`http://localhost:8089/plc/${plc.id}`, {
+                  id: plc.id,
+                  name: plc.name,
+                  token: plc.token,
+                  userid: plc.userid,
+                  addresses: plc.addresses
+
+                });
+                this.showSuccessModal();
+
+
+                // The response data will contain the updated PLC information
+                //console.log("Updated PLC:", response.data);
+                //console.log("Updated PLC:", response.data.addresses[0].id);
+                // After successfully adding the address, you can update the local Vue data to reflect the changes
+
+
+              } catch (error) {
+                console.error("Error updating PLC:", error);
+            
+              }
+            // Create the new PLC object
+       
+     
+
+   
+      
             // The response data will contain the updated PLC information
             //console.log("Updated PLC:", response.data);
             //console.log("Updated PLC:", response.data.addresses[0].id);
