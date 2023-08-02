@@ -493,11 +493,14 @@ categorizedAddressesFindByAddressID(addressID) {
     deleteAddress(addressIdToDelete,addressIndex, address) {
       console.log(addressIdToDelete);
       console.log(address);
-
+      console.log(this.findPLCWithAddressId(address.id));
+      //console.log(this.findPLCWithAddressId(address.id)['plcIndex']);
+      //console.log(this.plcItems);
     // Make the DELETE request using Axios
      axios.delete(`http://localhost:8089/address/${address.id}`).then(response => {
         // If the request is successful, remove the address from the local Vue data
-        this.plcItems[plcIndex].addresses.splice(addressIndex, 1);
+        this.plcItems[this.findPLCWithAddressId(address.id)['plcIndex']].addresses.splice(addressIndex, 1);
+
         console.log('Address deleted successfully:', response.data);
       })
       .catch(error => {
